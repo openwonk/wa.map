@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<style>
+
+	path.county {
+		stroke: black;
+		/*fill:#97d7f2;*/
+		}
+
+/*	path.county:hover {
+		fill: #2eaee5;
+		}*/
+
+	path.one.north { fill: #e74c3c ; }
+	path.one.south { fill: #3498db ; }
+	path.two.north { fill: #f1c40f ; }
+	path.two.south { fill: #9b59b6 ; }
+	path.three.north { fill: #1abc9c ; }
+	path.three.south { fill: #e67e22 ; }
+
+	path.one.north:hover { fill: #c0392b ; }
+	path.one.south:hover { fill: #2980b9 ; }
+	path.two.north:hover { fill: #f39c12 ; }
+	path.two.south:hover { fill: #8e44ad ; }
+	path.three.north:hover { fill: #16a085 ; }
+	path.three.south:hover { fill: #d35400 ; }	
+
+
+
+
+
+</style>
+<body>
+<!-- <h1>WA</h1> -->
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script src="http://d3js.org/topojson.v1.min.js"></script>
+<script>
+	var width = 2000,
+	    height = 1160;
+
+	var svg = d3.select("body").append("svg")
+	    .attr("width", width)
+	    .attr("height", height);
+
+	var dshs_regions = {
+		"one north": d3.set([ "17", "19", "23", "25", "43", "47", "51", "63", "65", "75", "07", "01", "03" ]), // R1 North
+		"one south": d3.set([ "13", "21", "37", "39", "71", "77", "05" ]),// R1 South
+		"two north": d3.set([ "29", "55", "57", "61", "73" ]),// R2 North
+		"two south": d3.set([ "33" ]),// R2 South
+		"three north": d3.set([ "35", "53" ]), // R3 North
+		"three south": d3.set(["11", "15", "27", "31", "41", "45", "49", "59", "67", "69", "09"]) // R3 South
+		}
+
+
+
+	// d3.json("counties.json", function(error, wa) {
+	d3.json("wa.json", function(error, wa) {
+
+		if (error) return console.error(error);
+
+		var wa_geo = wa.objects.counties.geometries
+
+		var counties = topojson.feature(wa, wa.objects.counties)
+			// selection = {type: "FeatureCollection", features: counties.features.filter(function(d) { return d.id in selected; })};
+
+		var projection = d3.geo.mercator()
+			.scale(8500)
+			.center([ -118.870353846999933, 47.261034973000164 ])
+			.translate([width / 2, height / 2]);
+
+		var path = d3.geo.path()
+		    .projection(projection);
+
+		svg.append("path")
+			.datum(counties)
+			.attr("d", path);
+
+		svg.selectAll(".county")
+			.data(topojson.feature(wa, wa.objects.counties).features)
+			.enter().append("path")
+			.attr("class", function(d) { return "county c" + d.id })
+			.attr("fips", function(d) { return d.id.substr(3) })
+			.attr("name", function(d) { return d.properties.name.replace(" County","") })
+			.attr("d", path);
+
+		// svg.append("path")
+		// 	.datum(topojson.mesh(wa, wa.objects.counties, function(a, b) { return a !== b; }))
+		// 	.attr("class", "county-boundary")
+		// 	.attr("d", path);
+
+
+
+		for (region in dshs_regions) { group_by_region(region,dshs_regions[region]) }
+
+		function group_by_region (region_name,region_counties) {
+			svg.append("path")
+				.datum(topojson.merge(wa, wa.objects.counties.geometries.filter(function(d) { return region_counties.has(d.id.substr(3)); })))
+				.attr("class", "county selected " + region_name)
+				.attr("d", path)
+		}
+
+	})
+
+
+
+
+
+
+	//   svg.append("path")
+	//       .datum(counties)
+	//       .attr("class", "county")
+	//       .attr("d", path);
+
+	//   // svg.append("path")
+	//   //     .datum(topojson.mesh(wa, wa.objects.counties, function(a, b) { return a !== b; }))
+	//   //     .attr("class", "county-boundary")
+	//   //     .attr("d", path);
+
+	//   svg.append("path")
+	//       .datum(selection)
+	//       .attr("class", "county selected-boundary")
+	//       .attr("d", path);
+
+	//   svg.append("path")
+	//       .datum(selection)
+	//       .attr("class", "county selected")
+	//       .attr("d", path);
+	// });
+
+
+
+
+
+</script>
+
+<script>
+	// var selected = d3.set([]);
+
+	// d3.selectAll("path").on("click",function(e) {
+	//     // console.log("e: ",e)
+	//     console.log("county: ",d3.select(this).attr("name"))
+	//     console.log("fips: ",d3.select(this).attr("fips"))
+	//     selected.add(d3.select(this).attr("fips"))
+
+
+	// })
+
+</script>
+</body>
